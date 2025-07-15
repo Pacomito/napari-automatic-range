@@ -33,6 +33,7 @@ dependencies = [
     "magicgui",
     "qtpy",
     "scikit-image",
+    "AutomaticRange",
 ]
 
 [project.optional-dependencies]

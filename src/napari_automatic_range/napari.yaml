@@ -30,6 +30,12 @@ contributions:
     - id: napari-automatic-range.make_qwidget
       python_name: napari_automatic_range:ExampleQWidget
       title: Make example QWidget
+    - id: napari-automatic-range.say_hi
+      title: Say hello, world!
+      python_name: napari_automatic_range:show_hello_message
+    - id: napari-automatic-range.automatic_range_widget
+      python_name: napari_automatic_range:AutomaticRangeWidget
+      title: Automatic Range Widget
   readers:
     - command: napari-automatic-range.get_reader
       accepts_directories: false
@@ -55,3 +61,8 @@ contributions:
       display_name: Autogenerate Threshold
     - command: napari-automatic-range.make_qwidget
       display_name: Example QWidget
+    - command: apari-automatic-range.say_hi  # note, same as command.id above
+      display_name: Hello World
+      autogenerate: true
+    - command: napari-automatic-range.automatic_range_widget
+      display_name: Automatic Range

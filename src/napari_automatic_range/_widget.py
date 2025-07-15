@@ -34,9 +34,58 @@ from magicgui import magic_factory
 from magicgui.widgets import CheckBox, Container, create_widget
 from qtpy.QtWidgets import QHBoxLayout, QPushButton, QWidget
 from skimage.util import img_as_float
+from magicgui.widgets import Container, create_widget, PushButton
+from AutomaticRange.smooth import predict_range
+import torch
+import os
+import numpy as np
+from AutomaticRange.models import AutomaticRangeNet
+from AutomaticRange.smooth import predict_range
 
 if TYPE_CHECKING:
     import napari
+
+class AutomaticRangeWidget(Container):
+    def __init__(self, viewer: "napari.viewer.Viewer"):
+        super().__init__()
+        self._viewer = viewer
+
+        self._dapi_layer = create_widget(
+            label="DAPI Image", annotation="napari.layers.Image"
+        )
+        self._marker_layer = create_widget(
+            label="Marker Image", annotation="napari.layers.Image"
+        )
+        self._run_button = PushButton(label="Run Automatic Range")
+
+        self._run_button.clicked.connect(self._run_predict_range)
+
+        self.extend([self._dapi_layer, self._marker_layer, self._run_button])
+
+    def _run_predict_range(self):
+        dapi_layer = self._dapi_layer.value
+        marker_layer = self._marker_layer.value
+        if dapi_layer is None or marker_layer is None:
+            return
+
+        checkpoint_path = os.path.join(
+            os.path.dirname(os.path.dirname("../../")),
+            "checkpoints",
+            "training_set_processed_CD4_nsamp_20_ntile_5_07102025_automatic_range.pt"
+        )
+
+        # Load trained model
+        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        model = AutomaticRangeNet().to(device)
+        model.load_state_dict(torch.load(checkpoint_path, map_location=device))
+        model.eval()
+
+        dapi = dapi_layer.data.astype(np.float16)
+        marker = marker_layer.data.astype(np.float16)
+        normalized_marker, min_interp, max_interp  = predict_range(dapi=dapi, marker=marker, model=model, device = device) 
+
+        name = marker_layer.name + "_normalized"
+        self._viewer.add_image(normalized_marker, name=name)
 
 
 # Uses the `autogenerate: true` flag in the plugin manifest
