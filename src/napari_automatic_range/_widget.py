@@ -34,17 +34,23 @@ from magicgui import magic_factory
 from magicgui.widgets import CheckBox, Container, create_widget
 from qtpy.QtWidgets import QHBoxLayout, QPushButton, QWidget
 from skimage.util import img_as_float
-from magicgui.widgets import Container, create_widget, PushButton
+from magicgui.widgets import Container, create_widget, PushButton, FileEdit
 from AutomaticRange.smooth import predict_range
 import torch
-import os
 import numpy as np
 from AutomaticRange.models import AutomaticRangeNet
 from AutomaticRange.smooth import predict_range
 
 if TYPE_CHECKING:
     import napari
+import requests
+from pathlib import Path
 
+@magic_factory(auto_call=True)
+def automatic_range_magic_widget(
+    dapi_layer: "napari.layers.Image", marker_layer: "napari.layers.Image"
+) -> None:
+    pass
 class AutomaticRangeWidget(Container):
     def __init__(self, viewer: "napari.viewer.Viewer"):
         super().__init__()
@@ -56,23 +62,58 @@ class AutomaticRangeWidget(Container):
         self._marker_layer = create_widget(
             label="Marker Image", annotation="napari.layers.Image"
         )
+
+        # Define the URL to download the default checkpoint file
+        checkpoint_url = "https://raw.githubusercontent.com/Pacomito/AutomaticRange/main/checkpoints/training_set_processed_CD4_nsamp_20_ntile_5_07102025_automatic_range.pt"
+        default_checkpoint_path = Path.home() / "checkpoint.pt"
+
+        # Load the last used checkpoint path from a settings file
+        settings_file = Path.home() / ".automatic_range_settings"
+        if settings_file.exists():
+            with open(settings_file, "r") as f:
+                last_checkpoint_path = f.read().strip()
+        else:
+            last_checkpoint_path = str(default_checkpoint_path)
+            with open(settings_file, "w") as f:
+                f.write(str(default_checkpoint_path))
+
+
+        # Download the default checkpoint file if it doesn't exist
+        if not default_checkpoint_path.exists():
+            try:
+                response = requests.get(checkpoint_url, stream=True)
+                response.raise_for_status()
+                with open(default_checkpoint_path, "wb") as f:
+                    for chunk in response.iter_content(chunk_size=8192):
+                        f.write(chunk)
+            except requests.RequestException as e:
+                print(f"Failed to download checkpoint: {e}")
+
+        # Set the initial value of the checkpoint file widget
+        self._checkpoint_file = FileEdit(
+            label="Checkpoint Path",
+            value=last_checkpoint_path
+        )
+
+        # Save the selected checkpoint path to the settings file when changed
+        def save_checkpoint_path(event):
+            with open(settings_file, "w") as f:
+                f.write(str(self._checkpoint_file.value))
+
+        self._checkpoint_file.changed.connect(save_checkpoint_path)
+
         self._run_button = PushButton(label="Run Automatic Range")
 
         self._run_button.clicked.connect(self._run_predict_range)
 
-        self.extend([self._dapi_layer, self._marker_layer, self._run_button])
+        self.extend([self._dapi_layer, self._marker_layer, self._checkpoint_file, self._run_button])
 
     def _run_predict_range(self):
         dapi_layer = self._dapi_layer.value
         marker_layer = self._marker_layer.value
-        if dapi_layer is None or marker_layer is None:
+        checkpoint_path = self._checkpoint_file.value
+        if dapi_layer is None or marker_layer is None or not checkpoint_path:
             return
-
-        checkpoint_path = os.path.join(
-            os.path.dirname(os.path.dirname("../../")),
-            "checkpoints",
-            "training_set_processed_CD4_nsamp_20_ntile_5_07102025_automatic_range.pt"
-        )
 
         # Load trained model
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -85,7 +126,7 @@ class AutomaticRangeWidget(Container):
         normalized_marker, min_interp, max_interp  = predict_range(dapi=dapi, marker=marker, model=model, device = device) 
 
         name = marker_layer.name + "_normalized"
-        self._viewer.add_image(normalized_marker, name=name)
+        self._viewer.add_image(normalized_marker, name=name, blending='additive')
 
 
 # Uses the `autogenerate: true` flag in the plugin manifest

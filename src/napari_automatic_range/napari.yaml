@@ -52,17 +52,17 @@ contributions:
       display_name: Automatic Range
       key: unique_id.1
   widgets:
-    - command: napari-automatic-range.make_container_widget
-      display_name: Container Threshold
-    - command: napari-automatic-range.make_magic_widget
-      display_name: Magic Threshold
-    - command: napari-automatic-range.make_function_widget
-      autogenerate: true
-      display_name: Autogenerate Threshold
-    - command: napari-automatic-range.make_qwidget
-      display_name: Example QWidget
-    - command: apari-automatic-range.say_hi  # note, same as command.id above
-      display_name: Hello World
-      autogenerate: true
+#    - command: napari-automatic-range.make_container_widget
+#      display_name: Container Threshold
+#    - command: napari-automatic-range.make_magic_widget
+#      display_name: Magic Threshold
+#    - command: napari-automatic-range.make_function_widget
+#      autogenerate: true
+#      display_name: Autogenerate Threshold
+#    - command: napari-automatic-range.make_qwidget
+#      display_name: Example QWidget
+#    - command: apari-automatic-range.say_hi  # note, same as command.id above
+#      display_name: Hello World
+#      autogenerate: true
     - command: napari-automatic-range.automatic_range_widget
       display_name: Automatic Range

@@ -8,6 +8,7 @@ from ._reader import napari_get_reader
 from ._sample_data import make_sample_data
 from ._widget import ExampleQWidget, ImageThreshold, threshold_autogenerate_widget, threshold_magic_widget
 from ._writer import write_multiple, write_single_image
+from ._widget import AutomaticRangeWidget
 from napari.utils.notifications import show_info
 
 __all__ = (
@@ -19,6 +20,7 @@ __all__ = (
     "ImageThreshold",
     "threshold_autogenerate_widget",
     "threshold_magic_widget",
+    "AutomaticRangeWidget",
 )
 
 def show_hello_message():
