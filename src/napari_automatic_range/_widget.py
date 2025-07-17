@@ -216,3 +216,6 @@ class ExampleQWidget(QWidget):
 
     def _on_click(self):
         print("napari has", len(self.viewer.layers), "layers")
+
+
+
