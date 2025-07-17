@@ -73,6 +73,7 @@ where = ["src"]
 [tool.setuptools_scm]
 write_to = "src/napari_automatic_range/_version.py"
 fallback_version = "0.0.1+nogit"
+local_scheme = "no-local-version"
 
 [tool.black]
 line-length = 79
